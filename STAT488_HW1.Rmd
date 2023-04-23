@@ -1,0 +1,213 @@
+---
+title: "STAT488_HW1"
+output:
+  pdf_document: default
+  html_document: default
+date: "2022-09-07"
+Author: "Melchor Ronquillo"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+```{r}
+library(carData)
+library(class)
+
+```
+1) Pg 52, Ex2: Classification vs Regression, Inference vs Prediction, find n and p
+    a) regression problem, interested in inference because we are interested in the factors that affect salary, n = 500 since it is the top 500 firms in US, p would be all the firms in the US
+    b) classification problem since "Success" and "Failure" are discrete variables, interested in prediction, n = 20 similar products and p would be all products
+    c) regression problem, "predicting percentages", n = data per week and p is all the data for the year
+
+
+
+2) Pg 52, Ex4: Real like applications for statistical learning
+    a) Classification (Qualitative)
+        * predicting whether someone would have a heart attack(Yes, No response) based on their sex, blood sugar, age, level of activity, average heart rate (predictors)
+        * Predicting if an email is spam (Yes, No response) or not based on sender address, time sent, format of message, contents of message (key words), frequency of mail (predictors)
+        * iris data set, predicting which species (Setosa, Versicolor, Virginica) depending on predictors like Sepal width/length, Petal width/length (predictors)
+    b) Regression (Quantitative)
+        * Predict the salary of teachers (response) based on how many classes they teach, level of degree, years of experience (predictors)
+        * Predict price of a house (response) based on sqft, bedrooms/bathrooms, crime rate in neighborhood, distance from school(predictors) 
+        * Determine whether the displacement (predictor) of an engine in a car is a factor to the MSRP of the vehicle (response), example of inference
+
+
+
+3) Pg 52, Ex5: Advantages and disadvantages of very flexible vs less flexible for regression or classification, what circumstances might a more flexible approach be preferred to less flexible approach, When might a less flexible approach be preferred?
+
+    Flexible models can fit more complex problems but may fit too well (no errors = overfitting). Less flexible requires less parameters and can be interpreted easier, but it may not be the most accurate. If model is underfitted, then a more flexible apporoach would be preferred. If a dataset is smaller and has less parameters, then a less flexible approach is preferred.
+
+
+
+4) Pg54, Ex8:
+    a) get data into R, call loaded data "college"
+```{r}
+data <- "/Users/melchorronquillo/Desktop/Data/College.csv"
+college <- data.frame(read.csv(data))
+
+```
+
+          b) Look at data using View() 
+            ***The csv does not have a row with college names, getting error
+```{r}
+#rownames(college) <- college[, 1]
+#college <- college[, -1]
+```
+
+          c) i: use summary() to produce numerical summary of variables in data set
+```{r}
+summary(college) 
+```
+
+          c) ii: use pairs() to produce scatterplot matrix of first 10 columns
+```{r}      
+#Error in pairs.default(college[, 1:10]) : non-numeric argument to 'pairs'
+
+#change private variable to numeric values (0,1) instead of (no, yes)
+college[,1] = as.factor(college[,1]) 
+pairs(college[,1:10])
+```
+
+          c) iii: use plot() to produce side-by-side boxplot of Outstate vs Private
+```{r}
+boxplot(college$Outstate~college$Private)
+```
+
+          c) iv: create Elite variable, bin Top10Perc variable, use summary function 
+            to see how many elite universities there are, plot Outstate vs Elite
+```{r}
+Elite <- rep("No", nrow(college))
+Elite[college$Top10perc > 50] <- "Yes"
+Eltie <- as.factor(Elite)
+college <- data.frame(college, Elite)
+colelite <- college[college$Elite == "Yes", ]
+nrow(colelite) # 78 elite colleges
+boxplot(college$Outstate ~ college$Elite)
+```
+
+          c) v: use hist() to produce histograms with differing number of bins for 
+            quantitative variables
+```{r}
+par(mfrow = c(2, 2))
+hist(college$PhD, breaks = 25, xlab = "Percent of Faculty with PhD", 
+     ylab = "Number of Universitiesin US", main = "Histogram of Faculty with PhD's",
+     col = "maroon",ylim = c(0,125))
+
+#histogram of applications vs accepted
+#max(college$Accept)
+#max(college$Enroll)
+hist(college$Apps, breaks = 50, xlim = c(0,27000), ylim = c(0,300), col='red', 
+     main='Histogram of College Applicants and Accepted Students', 
+     xlab = "Number of Applications Received and Accepted" , 
+     ylab = "Number of Universities in US")
+hist(college$Accept, breaks = 50, col='blue', add=TRUE)
+legend('topright', c('Applications', 'Accepted'), fill = c('red','blue'))
+
+hist(college$Grad.Rate, xlab = "Graduation Rate", main = "Histogram of Graduation Rate", 
+     ylab = "Number of Universities in US",
+     col = "gold", breaks = 75, xlim = c(0,100))
+
+
+colpriv <- college[college$Private=="Yes", ]
+colreg <- college[college$Private=="No", ]
+
+hist(colpriv$S.F.Ratio, breaks = 50, xlim = c(0,40), ylim = c(0,110), col='green', 
+     main='Histogram of S.F Ratio at Private and Public', xlab = "Student/Faculty Ratio", 
+     ylab = "Number of Universities in US")
+hist(colreg$S.F.Ratio, breaks = 25, col='orange', add=TRUE)
+legend('topright', c('Private', 'Public'), fill = c('green','orange'))
+
+
+
+```
+
+          c) vi: Continue exploring the data, and provide a brief summary of what 
+            you discover.
+```{r}
+
+colpriv <- college[college$Private=="Yes", ]
+nrow(colpriv)
+colreg <- college[college$Private=="No", ]
+nrow(colreg)
+mean(colpriv$Grad.Rate) - mean(colreg$Grad.Rate)
+mean(colpriv$Apps-colpriv$Accept) - mean(colreg$Apps-colreg$Accept)
+
+```
+                * There are 212 Private schools and 565 public schools in this dataset
+                * The average graduation rate at private schools are around 13% higher than public schools
+                * Public schools accept around an average of 1,139 more applicants than private schools 
+
+
+
+5) The training data set contains 175 observations classified as red or green. The test data set contains 1750 observations classified as either red or green.
+    a) Perform k-nearest neighbor classification using the training data with k = 1. Use this model to predict the class of each observation in the training data set. How many observations were incorrectly classified? Is this good?
+```{r}
+data2 = "/Users/melchorronquillo/Desktop/Data/PA_HW1_train.csv"
+rgtrain<- data.frame(read.csv(data2, row.names=NULL))
+k <- 1
+greg <- knn(train = rgtrain[,1:2], test = rgtrain[,1:2], cl = rgtrain[,3], k = k)
+#confusion matrix, diagonals should have most values correctly
+table(rgtrain$col, greg) 
+#avg of trues and falses, gives misclassification rate
+mean(rgtrain$col != greg) 
+```
+
+| Perfect classification but it means nothing.The error rate is 0, and it classified 100% of the greens and reds correctly. However, with no errors, it means the model is overfitted.This is not a good model to use with other data since it is trained so specifically to this training data. 
+
+          b) Again using k = 1, build a classification model with the training data set and use it to 
+          classify the observations in the test data set. How many observations were incorrectly 
+          classified? Is this good?
+```{r}
+data3 = "/Users/melchorronquillo/Desktop/Data/PA_HW1_test.csv"
+rgtest<- data.frame(read.csv(data3, row.names=NULL))
+greg <- knn(train = rgtrain[,1:2], test = rgtest[,1:2], cl = rgtrain[,3], k = k)
+table(rgtest$col, greg)
+mean(rgtest$col != greg)
+```
+
+| With the test data, we get a misclassification rate of around 41%. Although the rate is lot higher than the training data, it is much  better than just zero. The model is not overfitted and can still classify some of the data correctly (especially with keeping k = 1). With more training and finding a better value for K, this model will improve classifying the data. 
+
+
+6) Plot all irises based on their Sepal.Length and Sepal.Width values using different colors for each species.
+```{r}
+iris <- data.frame(iris)
+plot(iris$Sepal.Length, iris$Sepal.Width, col = iris$Species, pch = 16,
+     xlab = "Sepal Length",
+     ylab = "Sepal Width",
+     main ="Plot of Irises Based on Sepal Length and width")
+legend('topright', c('Setosa', 'Versicolor', 'Virginica'), 
+       fill = c('black','red', 'green'), cex = .8)
+
+```
+
+
+7) Perform knn analysis using the iris data with only Sepal.Length and Sepal.Width as predictors. Make predictions about the species of each iris and create a confusion matrix for this predictions.
+```{r}
+k <- 1
+# goes through every row of data set,generates uniform random numbers, scramble our data 
+u <- runif(nrow(iris))
+iristrain <- iris[u <= .70,] # training set has 70% of data
+irisholdout <- iris[u > .70,] # holdout set has 30% of data
+#nrow(iristrain)
+#nrow(irisholdout)
+greggie <- knn(train = iristrain[,1:2], test = irisholdout[,1:2], cl = iristrain[,5], k = k)
+table(irisholdout$Species, greggie)#confusion matrix
+```
+
+
+
+***trying to find lowest k and using it in model to reduce misclassification rate and improve confusion matrix
+```{r}
+error <- c()
+for (k in 1:nrow(iristrain)){
+gregk <- knn(train = iristrain[,1:2], test = irisholdout[,1:2], cl = iristrain[,5], k = k)
+error[k] <- mean(irisholdout[,5] != gregk)
+}
+#View(error)
+plot(1:nrow(iristrain), error, pch = 16) # the value where k is the lowest is 20
+
+gregnewk <- knn(train = iristrain[,1:2], test = irisholdout[,1:2], cl = iristrain[,5], k = 37)
+table(irisholdout$Species, gregnewk) 
+mean(irisholdout$Species != gregnewk)
+```
