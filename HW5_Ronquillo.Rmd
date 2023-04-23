@@ -1,0 +1,114 @@
+---
+title: "HW5_Ronquillo"
+author: "Melchor Ronquillo"
+date: "2022-11-07"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+1) Download the titanic data set:
+```{r}
+install.packages('ISLR2', repos = "http://cran.us.r-project.org")
+library(ISLR2)
+test <- "/Users/melchorronquillo/Desktop/Files/Data/titanic/test.csv"
+test<- data.frame(read.csv(test))
+train <- "/Users/melchorronquillo/Desktop/Files/Data/titanic/train.csv"
+train<- data.frame(read.csv(train))
+gender <- "/Users/melchorronquillo/Desktop/Files/Data/titanic/gender_submission.csv"
+gender <- data.frame(read.csv(gender))
+
+### combine gender submission w/ test to determine accuracy/error later
+testt <- merge(test, gender, by.x = "PassengerId", by.y = "PassengerId", all.x = TRUE, all.y = TRUE)
+#testt
+
+### change sex to binary values, male = 1, female = 0
+train$Sex <- ifelse(train$Sex == "male",1,0)
+### change Survived to factor for classification
+train$Survived <- as.factor(train$Survived)
+#train
+
+### check for NaN values
+train.nan <- colSums(is.na(train))
+#train.nan
+### Age is the only column with NaN values, impute usung mean age for NaN values
+train.nonan <- train
+train.nonan$Age[is.na(train.nonan$Age)] <- mean(train.nonan$Age,na.rm = TRUE)
+#train.nonan
+
+
+
+### repeat process for test data
+testt$Sex <- ifelse(testt$Sex == "male",1,0)
+testt$Survived <- as.factor(testt$Survived)
+#testt
+
+testt.nan <- colSums(is.na(testt))
+#testt.nan
+testt.nonan <- testt
+testt.nonan$Age[is.na(testt.nonan$Age)] <- mean(testt.nonan$Age,na.rm = TRUE)
+testt.nonan$Fare[is.na(testt.nonan$Fare)] <- mean(testt.nonan$Fare,na.rm = TRUE)
+#testt.nonan
+```
+
+2) Build a classification tree to predict the variable “Survived”. Report the 
+cross validation error using k-fold cross validation with a reasonable value of 
+k
+```{r}
+### classification tree
+install.packages('tree', repos = "http://cran.us.r-project.org")
+library(tree)
+k <- 5
+set.seed(104)
+fold <- sample(1:5,nrow(train), replace = TRUE)
+yhat = rep(NA,nrow(train))
+for (i in 1:k){
+tree.titanic <- tree(Survived ~ .  - PassengerId - Name - Ticket - Cabin - Embarked, 
+                     data = train[fold !=i,])
+yhat[fold == i] <- predict(tree.titanic,train[fold == i,])[,2]
+}
+
+### find accuracy / misclassification
+(table(yhat > 0.5, train$Survived))
+class_tree.CVerr <- 1 - sum(diag(table(yhat > 0.5, train$Survived))) / nrow(train)
+class_tree.CVerr
+### misclassification error from cross validation = %20.76
+```
+
+        Cross validation error using k-fold = %20.76
+        
+        
+
+3) Use a random forest to predict the variable “Survived”. Report the out-of-bag 
+cross validation error.
+```{r}
+### random forest
+install.packages('randomForest', repos = "http://cran.us.r-project.org")
+library(randomForest)
+rf.titanic <- randomForest(Survived ~ . - PassengerId - Name - Ticket - Cabin - Embarked , data = train.nonan)
+rf.titanic
+### Out of Bag estimate of error rate = %16.95
+```
+
+         Out of Bag estimate of error = %16.95
+         
+         
+         
+```{r}
+#yhelp("randomForest")
+#str(rf.titanic2)
+#varImpPlot(rf.titanic2)
+
+yhat.rff <- predict(rf.titanic,  newdata = testt.nonan)
+#yhat.rff
+### random forest test accuracy / misclassification
+(table(yhat.rff, testt.nonan$Survived))
+rff.err <- 1 - sum(diag(table(yhat.rff, testt.nonan$Survived))) / nrow(testt.nonan)
+rff.err
+### test misclassifcation error = %10.52
+```
+
+        

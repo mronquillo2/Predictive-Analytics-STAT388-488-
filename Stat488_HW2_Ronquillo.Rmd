@@ -1,0 +1,394 @@
+---
+title: "HW2_STATS488"
+author: "Melchor Ronquillo"
+date: "2022-09-19"
+output:
+  pdf_document: default
+  html_document: default
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+# 1) Chapter 3, Question 3
+
+Suppose we have a data set with five predictors: X1 = GPA, X2 = IQ, X3 = Level (1 for College and 0 for High School),
+X4 = Interaction between GPA and IQ, X5 = Interaction between GPA and Level.
+
+The response is starting salary after graduation (in thousands of dollars).
+Suppose we use least squares to fit the model, and get
+* B0 = 50,B 1 = 20, B2 = 0.07, B3 = 35, B4 = 0.01, B5 = 10
+        
+        a) which answer is correct, and why? 
+
+            Y = 50 + 20X1(GPA) + 0.07X2(IQ) + 35X3(Level) + 0.01X4(GPA:IQ) - 10X5(GPA:Level)
+
+            For level = college(1)
+            Y = 50 + 20X1(GPA) + 0.07X2(IQ) + 35(1) + 0.01X4(GPA*IQ) - 10X5(GPA(1))
+            Y = 85 + 20X1(GPA) + 0.07X2(IQ) + 0.01X4(GPA*IQ) - 10(GPA)
+            Y = 85 + 10X1(GPA) + 0.07X2(IQ) + 0.01X4(GPA*IQ)
+
+            For level = high school(0):
+            Y = 50 + 20X1(GPA) + 0.07X2(IQ) + 35(0) + 0.01X4(GPA*IQ) - 10X5(GPA(0))
+            Y = 50 + 20X1(GPA) + 0.07X2(IQ) + 0.01X4(GPA*IQ)
+
+            iii. For a fixed value of IQ and GPA, high school graduates earn more, 
+            on average, than college graduates provided that the GPA is high enough
+            with IQ and GPA being the same fixed value, each equation differs as so: 
+            
+            college = Y = 85 + 10X1(GPA)
+            high school = Y = 50 + 20X1(GPA)
+            
+            answers i and ii cannot be correct because it there IS a possibility that one 
+            group could earn more than the other IF a specific condition is met, which in 
+            this case is GPA. It may appear that college graduates earn more than high school 
+            graduates based on the equation with their B0 as 85 vs 50 but if the GPA is at 
+            least 3.5 or higher then high schoolers will on average earn more than college graduates.
+            
+        b) Predict the salary of a college graduate with IQ of 110 and a GPA of 4.0.
+
+            Y = 50 + 20(4.0) + 0.07(110) + 35(1) + 0.01(440) - 1(4)
+```{r}
+Y = 50 + 80.0 + 77 + 35 + 44 - 4
+Y
+```
+$282,000
+
+        c) True or false: Since the coefficient for the GPA/IQ interaction term 
+        is very small,there is very little evidence of an interaction effect.
+        Justify your answer.
+            Cannot conclude the significance of interaction between terms based 
+            on it's coefficients.The significance of the interaction between two 
+            variables can be determined by the P-Value and base it off from the 
+            significance level.
+
+
+
+
+# 2) Chapter 3, Problem 9
+This question involves the use of multiple linear regression on the Auto data set.
+```{r}
+install.packages("ISLR",repos = "http://cran.us.r-project.org")
+library('ISLR')
+```
+
+        a) Produce a scatterplot matrix which includes all of the variables in 
+        the data set.
+```{r}
+pairs(Auto)
+```
+
+        b) Compute the matrix of correlations between the variables using the 
+        function cor().You will need to exclude the name variable, which is qualitative.
+```{r}
+Auto_Noname = Auto[, c("mpg", "cylinders",  "displacement", "horsepower", 
+                       "weight", "acceleration", "year", "origin")]
+Auto_cor = cor(Auto_Noname)
+pairs(Auto_cor)
+```
+
+        c) Use the lm() function to perform a multiple linear regression with mpg as the 
+        response and all other variables except name as the predictors. Use the 
+        summary() function to print the results. 
+```{r}
+mpg.lm = lm(mpg~., data = Auto_Noname)
+summary(mpg.lm)
+```
+        
+        Comment on the output. For instance:
+        
+        i. Is there a relationship between the predictors and the response?
+            
+            Relationship with the predictors and response can be measured by the 
+            significance of each p - value. some predictiors appear to have a significant
+            relationship with the response while others do not.
+
+        ii. Which predictors appear to have a statistically significant relationship 
+        to the response?
+            
+            We can determine whether a predictor appears to a have statistically 
+            significant relationship to the response based on the significance 
+            code given in the summary. The number of *s next to a specific variable 
+            presents how significant a variable is to the response based on it's p-value.
+            The hypothesis is H0: B = 0, and if a P-Value is less than the significance
+            value (usually .05 for 95% confidence interval), then the null hypothesis
+            is rejected and it shows that there is a non zero correlation between 
+            the predictor and response.In this regression with mpg as the response, 
+            the predictors weight, year, and origin have ***, meaning that it is 
+            statistically significant at a 100% confidence interval. 
+            Displacement is also statistically significant with ** meaning it is 
+            significant at a 99.9% confidence interval.
+
+        iii. What does the coefficient for the year variable suggest?
+             
+             The predictor year has a coefficient of 0.750773. For every increment 
+             of 1 that year increases, the mpg will go up by 0.750773
+
+
+
+        d) Use the plot() function to produce diagnostic plots of the linear regression fit. 
+```{r}
+plot(mpg.lm)
+```
+
+            Comment on any problems you see with the fit. 
+            Do the residual plots suggest any unusually large outliers?
+            Does the leverage plot identify any observations with unusually high 
+            leverage?
+            
+              Based on the plots, there do not appear to be any unusually large outliers.
+              There are some points that stray away from the line in teh Normal QQ
+              plot, but since all plots seem to remain within -2 to 2 in the 
+              scale location plot and there are no points that exceed the dotted red line
+              in the cooks distance plot, the fit does not seem to have any observations with 
+              unusually high outliers and leverage.
+              
+
+
+
+        e) Use the * and : symbols to fit linear regression models with interaction effects.
+        Do any interactions appear to be statistically significant?
+```{r}
+mpg.lm2 = lm(mpg~.+ displacement*horsepower + weight*horsepower + 
+               displacement*cylinders, data = Auto_Noname)
+summary(mpg.lm2)
+```
+
+            Based on the interactions, displacement:power and horsepower:weight
+            both appear to be statistically significant. This makes sense because 
+            displacement and horsepower relates in the sense that a vehicle with 
+            a hoigh displacement has a bigger engine ann combined with high horsepower
+            means that it is either a fast performance car or a big truck, both vehicles
+            that are known for a lower mpg. Horsepower and weight also interact in
+            a sence that a lighter car with high horsepower will still have 
+            better mpg than a heavy car with the same amount of horsepower because 
+            it will take more gas to get the heavy car going. 
+            
+
+
+        f) Try a few different transformations of the variables, such as log(X), sqX, X2.
+        Comment on your findings.
+        
+```{r}
+plot(Auto_Noname$mpg, Auto_Noname$displacement)
+plot(Auto_Noname$mpg, -log(Auto_Noname$displacement))
+```
+
+          By taking the -log of displacement, I was able to transform the plot of 
+          mpg and displacement to a more linear relationship. This will also work
+          with horsepower and weight.
+
+
+
+
+# 3) Chapter 3, Problem 10
+
+This question should be answered using the Carseats data set.
+
+        a) Fit a multiple regression model to predict Sales using Price, Urban,and US.
+```{r}
+sales.mlr = lm(Sales~Price+Urban+US, data = Carseats)
+summary(sales.mlr)
+```
+                
+        b) Provide an interpretation of each coefficient in the model. Be careful, 
+        some of the variables in the model are qualitative!
+        
+            For every dollar increase in price, sales will decrease by 0.054459 
+            thousand. If the carseat is in an urban area, sales will decrease by 
+            0.021916 thousand. If the carseat is in the US, sales will go up by 
+            1.200573 thousand
+
+
+        c) Write out the model in equation form, being careful to handle the 
+        qualitative variables properly.
+        
+            Sales = 13.043469  - 0.054459X1(Price) - 0.021916(Urban) + 1.200573(US)
+
+        d) For which of the predictors can you reject the null hypothesis 
+        H0:B=0?
+        
+          We can reject null hypothesis for Price and US, the p-value of both 
+          variables are less than 0.05. 95% confident that those predictors 
+          each have a non zero correlation with Sales.
+
+        e) On the basis of your response to the previous question, fit a smaller 
+        model that only uses the predictors for which there is evidence of association 
+        with the outcome.
+```{r}
+sales.mlr2 = lm(Sales~Price+US, data = Carseats)
+summary(sales.mlr2)
+```
+
+        f) How well do the models in (a) and (e) fit the data?
+        
+          Both models fit the model similarly well, with no major difference
+          between the R-squared values. This means that Urban had no real 
+          impact in prediciting the sales of carseats.
+
+        g) Using the model from (e), obtain 95% confidence intervals for the 
+        coefficient(s).
+```{r}
+confint(sales.mlr2)
+```
+
+        h) Is there evidence of outliers or high leverage observations in the model 
+        from (e)?
+```{r}
+plot(sales.mlr2)
+```
+        
+            No evidence of outliers or high leverage obersavtions in model
+
+
+
+# 4) Chapter 4, question 6
+Suppose we collect data for a group of students in a statistics class with variables:
+X1 = hours studied, X2 = undergrad GPA, Y = receive an A. We fit a logistic 
+regression and produce estimated coefficient: B0 = -6, B1 = 0.05, B2 = 1.
+  
+Y = -6 + 0.05X1(Hours) + 1X2(GPA)
+
+        a) Estimate the probability that a student who studies for 40 h and has an 
+        undergrad GPA of 3.5 gets an A in the class.
+        
+            p(x) = (e^(B0 + B1X1 + B2X2)) / (1 + e^(B0 + B1X1 + B2X2))
+```{r}
+Py <- (exp(-6 + (0.05*40) + 3.5) / (1 + exp(-6 + (0.05*40) + 3.5)))
+Py
+```
+
+            The probability that a student who studies for 40 hours and has a 
+            GPA of 3.5 gets an A is 37.75%
+
+
+        b) How many hours would the student in part (a) need to study to have a 
+        50 % chance of getting an A in the class?
+        
+            0.50 = (e^(-6 + 0.05X1 + 3.5)) / (1 + e^(-6 + 0.05X1 + 3.5)), 
+            solve for X1
+            
+            log(p(x) / 1 - p(x)) = B0 + B1X1 + B2X2
+            log(0.50 / 1 - 0.50) = -6 + 0.05X1 + 3.5
+            log(0.50 / 1 - 0.50) + 6 - 3.5 = 0.05X1
+            (log(0.50 / 1 - 0.50) + 6 - 3.5 ) / 0.05 = X1
+
+```{r}
+x <- (0.50 / (1 - 0.50))
+x
+logg <- log(x)
+logg
+X1 = (logg + 6 - 3.5 ) / 0.05
+X1
+```
+
+            A student with a GPA of 3.5 would have to study for 50 hourse to have 
+            a 50% chance of getting an Ain the class
+
+
+# 5) Chapter 4, question 16
+Using the Boston data set, fit classification models in order to predict whether a given census tract has a crime rate above or below the median. Explore logistic regression, LDA, naive Bayes, and KNN models using various subsets of the predictors. Describe your findings.
+
+```{r}
+library(MASS)
+library(class)
+#Boston
+```
+
+    for every row with crim > 2.5, classify as 1, else 0
+```{r}
+Boston$I_crime <- (Boston$crim > median(Boston$crim)) + 0
+#Boston
+```
+
+    Remove original crim column
+```{r}
+Boston = subset(Boston, select = -c(crim))
+#Boston
+```
+
+    Split data into training (70%) and testing (30%)
+```{r}
+set.seed(338)
+u <- runif(nrow(Boston))
+#u
+train <- Boston[u <= 0.7,]
+test <- Boston[u >  0.7,]
+#train
+```
+
+    Create logistic regression
+```{r}
+crimlog <- glm(I_crime~ ., data = train, family = "binomial")
+```
+
+    Predict probabilities
+```{r}
+crimlog.probs <- predict(crimlog, test, type = "response")
+crimlog.probs
+```
+
+    Where probablity is atleast .50, classify as 1, else 0
+```{r}
+crimlog.pred <- (crimlog.probs >= .5) + 0
+crimlog.pred
+#length(crimlog.pred)
+```
+
+    create confusion matrix and show error rate
+```{r}
+table(crimlog.pred, test$I_crime) #Confusion Matrix
+(10+4) / length(test$I_crime) #Error rate
+```
+
+LDA
+```{r}
+crimlda <- lda(I_crime~., data = train, family = "binomial")
+crimlda.pred = predict(crimlda, test)
+table(crimlda.pred$class, test$I_crime) #Confusion Matrix
+(3+19) / length(test$I_crime) #Error rate
+```
+
+
+KNN
+```{r}
+library(carData)
+library(class)
+crimknn <- knn(train = train[,1:13], test = test[,1:13], cl = train[,14], k = 1)
+table(test$I_crime, crimknn) #Confusion Matrix
+(6+9) / length(test$I_crime) #Error rate
+```
+
+    I want to try and find a better K by plotting the errors and finding the 
+    lowesr point as my K
+```{r}
+k = 1
+error <- c()
+for (k in 1:nrow(train)){
+crimknn2 <- knn(train = train[,1:13], test = test[,1:13], cl = train[,14], k = k)
+error[k] <- mean(test$I_crime != crimknn2)
+}
+#View(error)
+plot(1:nrow(train), error, pch = 16) #Lowest points are closest to x = 0, try k = 5
+
+
+crimknn <- knn(train = train[,1:13], test = test[,1:13], cl = train[,14], k = 10)
+table(test$I_crime, crimknn) #Confusion Matrix
+(8+10) / length(test$I_crime) #Error rate
+```
+    
+    Turns out, K = 1 yielded beter results
+
+Naive Bayes
+```{r}
+install.packages("e1071", repos = "http://cran.us.r-project.org")
+library(e1071)
+crimnb <- naiveBayes(I_crime~., data = train)
+crimnb.pred <- predict(crimnb, test)
+table(crimnb.pred, test$I_crime) #Confusion Matrix
+(18+8) / length(test$I_crime) #Error rate
+```
+
+    Out of all of the different models for this dataset, my logistic regression
+    predicted whether a given census tract has a crime rate above or below the median
+    the best, as it had the lowest error/ missclassification rate of 9.03%. 
+    KNN came in 2nd with 9.67%, LDA with 14.19%, and Naive Bayes with 16.77% 

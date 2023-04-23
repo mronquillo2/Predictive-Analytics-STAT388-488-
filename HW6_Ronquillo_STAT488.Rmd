@@ -1,0 +1,141 @@
+---
+title: "HW6_Ronquillo"
+author: "Melchor Ronquillo"
+date: "2022-11-22"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+1. Describe the difference between bagging and boosting with trees.
+
+        Bagging creates multiple copies of original training data using the 
+        bootstrap, fits a separate decision tree for each copy, combines all of 
+        the trees in order to create one predictive model. Boosting does somewhat
+        the same but the trees grow sequentially, each tree grows using info from 
+        previous trees. Boosting does not involve bootstrap sampling and instead, 
+        each tree is fit on a modified version of the orignial data set
+
+
+
+2. This question uses the Caravan data set (from the R package ISLR2).
+```{r}
+install.packages('ISLR2', repos = "http://cran.us.r-project.org")
+library(ISLR2)
+car_data <- Caravan
+#car_data
+
+car_data$Purchase <- ifelse(car_data$Purchase =="Yes",1,0)
+#car_data$Purchase <- as.factor(car_data$Purchase)
+#car_data
+```
+
+        (a) Create a training set consisting of the first 1,000 observations, 
+            and a test set consisting of the remaining observations.
+
+```{r}
+nrow(car_data)
+train_bst <- car_data[1:1000,]
+test_bst <- car_data[1001:5822,]
+```
+
+        (b) Fit a boosting model to the training set with Purchase as the response 
+            and the other variables as predictors. Use 1,000 trees, and a shrinkage 
+            value of 0.01. Which predictors appear to be the most important?
+
+```{r}
+install.packages('gbm', repos = "http://cran.us.r-project.org")
+library(gbm)
+car_boost <- gbm(Purchase ~ ., data = train_bst, distribution = 'bernoulli', n.trees = 1000, shrinkage = 0.01)
+car_boost
+summary(car_boost)
+```
+
+                Out of the 85 total predictors, 50 of them had non-zero influence.
+                Predictors such has PPERSUAT, MKOOPKLA, MOPLHOOG, MBERMIDD, PBRAND,
+                ABRAND, MGODGE, and MINK3045 all had relative influence greater than 
+                3, while many others being between 0 - 2. 
+        
+        
+        
+        
+        (c) Use the boosting model to predict the response on the test data. 
+            Predict that a person will make a purchase if the estimated probability 
+            of purchase is greater than 20%. Form a confusion matrix. What fraction 
+            of the people predicted to make a purchase do in fact make one? How does 
+            this compare with the results obtained from applying KNN or logistic 
+            regression to this data set?
+```{r}
+set.seed(1111)
+yhat_boost <- predict(car_boost, newdata = test_bst, type = "response")
+#yhat_boost
+test_predict <- ifelse(yhat_boost > 0.2, 1, 0)
+#test_predict
+table(test_predict, test_bst$Purchase)
+```
+
+                Out of the 165 people predicted to make a purchase, only 36 people
+                actually made one (28% accuracy).
+                  
+                  ***NOTE: the predictions and table values are always changing 
+                  after each knit even with a seed, however the accuracies are 
+                  always around the same***
+
+```{r}
+set.seed(2)
+car_log <- glm(Purchase ~ ., data = train_bst, family = "binomial")
+#car_log
+yhat_log <- predict(car_log, newdata = test_bst, type = "response")
+#yhat_log
+log_predict <- ifelse(yhat_log> 0.2, 1, 0)
+table(log_predict, test_bst$Purchase)
+```
+
+                For logistic regression, out of the 408 people predicted to make 
+                a purchase, only 58 actually did (14% accuracy) 
+
+
+```{r}
+install.packages('class', repos = "http://cran.us.r-project.org")
+library(class)
+set.seed(3)
+car_knn <- knn(train=train_bst, test=test_bst, cl=train_bst$Purchase, k=1)
+#car_knn
+table(car_knn ,test_bst$Purchase)
+```
+
+                For knn with k = 1, out of the 276 people predicted to make a 
+                purchase, 27 people did (9% accuracy)
+
+
+```{r}
+set.seed(4)
+error <- c()
+for (k in 1:20){#print(k)
+car_knncv <- knn(train=train_bst, test=test_bst, cl=train_bst$Purchase, k=k)
+
+#table(holdout$col, greg)
+error[k] <- mean(test_bst$Purchase != car_knncv)
+}
+
+plot(1:20, error, pch = 16)
+
+set.seed(5)
+car_knn2 <- knn(train=train_bst, test=test_bst, cl=train_bst$Purchase, k=8)
+#car_knn2
+table(car_knn2 ,test_bst$Purchase)
+```
+
+                Using cross validation to find the best k, with k = 8, out of 10
+                people predicted to make a purchase only 2 did (20%)
+                
+                Overall I believe that all these classifiers did a good job 
+                predicting who will not make a purchase and actually did not make 
+                a purchase, and although the accuracies were not that great in 
+                predcicting who would make a purchase that actually made a purchase
+                the boosting model had the best accuracy in comparison to logistic
+                and KNN. 
