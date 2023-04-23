@@ -4,12 +4,6 @@ Richard Hauser & Melchor Ronquillo
 
 Pre Processing
 
-Python Links : https://colab.research.google.com/drive/1_dPTdoQQsEoTyW0ECD0wKN57lZsrR6Ix?usp=sharing
-
-Grid search
-
-https://colab.research.google.com/drive/1c8iFyi2kAZ8-7XDTehU3gLG1ZGKPPGeD?usp=sharing
-
 Similar to the infamous “Titanic” dataset that has been used for statistical and machine learning applications, we are given the task to determine which passengers will be transported from the Space Titanic after it had “collided with a spacetime anomaly hidden within a dust cloud”. In this dataset, we are given many different variables such as: PassengerId - A unique Id for each passenger. Each Id takes the form gggg_pp where gggg indicates a group the passenger is traveling with and pp is their number within the group. HomePlanet - The planet the passenger departed from. CryoSleep - Indicates whether the passenger elected to be put into suspended animation for the duration of the voyage. Passengers in cryosleep are confined to their cabins. Cabin - The cabin number where the passenger is staying. Takes the form deck/num/side, where side can be either P for Port or S for Starboard. Destination - The planet the passenger will be debarking to. Age - The age of the passenger. VIP - Whether the passenger has paid for special VIP service during the voyage. RoomService, FoodCourt, ShoppingMall, Spa, VRDeck - Amount the passenger has billed at each of the Spaceship Titanic’s many luxury amenities. Name - The first and last names of the passenger. Transported - Whether the passenger was transported to another dimension.
 
 These variables are used in prediction when trying to determine whether someone was “transported” to a different dimension or not.
@@ -33,3 +27,8 @@ We then took that model and ran it through the testing dataset from kaggle which
 GBM WHEN TUNED HAS 20.44% ERROR. RANDOM FOREST HAS 19.66% ERROR SVM HAS 19.57% ERROR LOGISTIC REGRESSION 22.00% ERROR
 
 In the future, we plan to continue to tune our models to achieve an accuracy of at least 80%. We would also want to go and try and fit a neural network on this data set and see how it would work and see if it would yield a larger classification rate. We could also take these classification models and try and apply them to different datasets too.
+
+
+Links:
+Data preprocessing: https://colab.research.google.com/drive/1_dPTdoQQsEoTyW0ECD0wKN57lZsrR6Ix?usp=sharing
+Logistic, SVM, Grid Search: https://colab.research.google.com/drive/1c8iFyi2kAZ8-7XDTehU3gLG1ZGKPPGeD?usp=sharing
