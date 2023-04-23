@@ -1,0 +1,178 @@
+---
+title: "HW7"
+author: "Melchor Ronquillo"
+date: "2022-12-08"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+8. This problem involves the OJ data set which is part of the ISLR2 package.
+
+    (a) Create a training set containing a random sample of 800 observations, 
+        and a test set containing the remaining observations.
+```{r}
+install.packages('ISLR2', repos = "http://cran.us.r-project.org")
+library(ISLR2)
+
+Juice <- OJ
+Juice
+
+
+set.seed(777)
+randomJuice= Juice[sample(1:nrow(Juice)), ]
+#randomJuice
+
+nrow(randomJuice)
+train_OJ <- randomJuice[1:800,]
+test_OJ <- randomJuice[801:1070,]
+
+#train_OJ
+#test_OJ
+```
+
+    (b) Fit a support vector classifier to the training data using cost = 0.01, 
+        with Purchase as the response and the other variables as predictors. 
+        Use the summary() function to produce summary statistics, and describe 
+        the results obtained.
+```{r}
+install.packages('e1071', repos = "http://cran.us.r-project.org")
+library(e1071)
+
+set.seed(778)
+JuiceSVC <- svm(Purchase ~ ., data = train_OJ, kernel = "linear", cost = 0.01, scale = TRUE)
+#plot(JuiceSVM, train_OJ)
+summary(JuiceSVC)
+```
+
+          
+        
+    (c) What are the training and test error rates?
+```{r}
+train_OJ_pred = predict(JuiceSVC, train_OJ)
+table(train_OJ$Purchase, train_OJ_pred)
+train_error = (57+75) / (453+57+75+235)
+train_error
+```
+
+        Train error rate:
+          16% error
+ 
+```{r}
+test_OJ_pred = predict(JuiceSVC, test_OJ)
+table(test_OJ$Purchase, test_OJ_pred)
+test_error = (26+24) / (137+26+24+83)
+test_error
+```
+        
+        Test error rate:
+          18.5%
+        
+        
+    (d) Use the tune() function to select an optimal cost. Consider values in 
+        the range 0.01 to 10.
+```{r}
+set.seed(779)
+tuneJuice <- tune(svm, Purchase ~ ., data = Juice, kernel = "linear", 
+                  ranges = list(cost = c(0.01, 0.05, 0.1, 0.5, 1, 5, 10))
+                  )
+summary(tuneJuice)
+```
+
+    (e) Compute the training and test error rates using this new value for cost.
+```{r}
+bestmod <- tuneJuice$best.model
+summary(bestmod)
+
+bestpred_OJ_SVC <- predict(bestmod, test_OJ)
+table(test_OJ$Purchase, bestpred_OJ_SVC)
+test_error = (23+23) / (140+23+23+84)
+test_error
+```
+
+        Test Error: 17%
+        
+        
+    (f) Repeat parts (b) through (e) using a support vector machine with a 
+        radial kernel. Use the default value for gamma.
+```{r}
+#Create SVM
+set.seed(780)
+JuiceSVM <- svm(Purchase ~ ., data = train_OJ, kernel = "radial", 
+                gamma = 1, cost = 0.01, scale = TRUE)
+#plot(JuiceSVM, train_OJ)
+summary(JuiceSVM)
+
+#train and test errors
+train_OJ_predSVM = predict(JuiceSVM, train_OJ)
+table(train_OJ$Purchase, train_OJ_predSVM)
+
+test_OJ_predSVM = predict(JuiceSVM, test_OJ)
+table(test_OJ$Purchase, test_OJ_predSVM)
+
+#Tune
+set.seed(781)
+tuneJuiceSVM <- tune(svm, Purchase ~ ., data = Juice, kernel = "radial", 
+                  ranges = list(cost = c(0.01, 0.05, 0.1, 0.5, 1, 5, 10))
+                  )
+
+summary(tuneJuiceSVM)
+
+bestmodSVM <- tuneJuiceSVM$best.model
+summary(bestmodSVM)
+
+bestpred_OJ_SVM <- predict(bestmodSVM, test_OJ)
+table(test_OJ$Purchase, bestpred_OJ_SVM)
+test_error = (14+26) / (149+14+26+81)
+test_error
+```
+
+        Test Error: 14.8%
+   
+   
+   
+    (g) Repeat parts (b) through (e) using a support vector machine with a 
+        polynomial kernel. Set degree = 2.
+```{r}
+set.seed(782)
+JuiceSVCPoly <- svm(Purchase ~ ., data = train_OJ, kernel = "polynomial", 
+                    cost = 0.01,
+                    degree = 2,
+                    scale = TRUE)
+summary(JuiceSVCPoly)
+
+#train and test errors
+train_OJ_predPoly = predict(JuiceSVCPoly, train_OJ)
+table(train_OJ$Purchase, train_OJ_predPoly)
+
+test_OJ_predPoly = predict(JuiceSVCPoly, test_OJ)
+table(test_OJ$Purchase, test_OJ_predPoly)
+
+#tune
+set.seed(779)
+tuneJuicePoly <- tune(svm, Purchase ~ ., data = Juice, kernel = "polynomial",
+                      degree = 2, scale = TRUE,
+                      ranges = list(cost = c(0.01, 0.05, 0.1, 0.5, 1, 5, 10))
+                  )
+summary(tuneJuicePoly)
+
+#best model
+bestmodPoly <- tuneJuicePoly$best.model
+summary(bestmodPoly)
+
+bestpred_OJ_Poly <- predict(bestmodPoly, test_OJ)
+table(test_OJ$Purchase, bestpred_OJ_Poly)
+test_error = (15+25) / (148+15+25+82)
+test_error
+```
+
+        Test Error: 14.8%
+    
+    (h) Overall, which approach seems to give the best results on this data?
+    
+        Overall, the approach witht he best results was both radial and polynomial, 
+        as they both had the lowest test error rate of 14.8%
